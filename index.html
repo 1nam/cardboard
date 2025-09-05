@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Junky Cardboard Room Interactive</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+  }
+  #info {
+    position: absolute;
+    top: 10px;
+    color: #0ff;
+    font-size: 1.1em;
+    text-align: center;
+    width: 100%;
+  }
+  .object {
+    cursor: pointer;
+    margin: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div id="info">Click the door to go to the next room. Click the drawer to open it!</div>
+
+<!-- Door and Drawer -->
+<model-viewer id="door" class="object"
+              src="https://modelviewer.dev/shared-assets/models/Cube.glb"
+              style="width:150px; height:150px;" auto-rotate rotation-per-second="0">
+</model-viewer>
+
+<model-viewer id="drawer" class="object"
+              src="https://modelviewer.dev/shared-assets/models/Cube.glb"
+              style="width:100px; height:80px;" auto-rotate rotation-per-second="0">
+</model-viewer>
+
+<!-- Sound -->
+<audio id="doorSound" src="https://www.soundjay.com/door/door-creak-1.mp3"></audio>
+<audio id="drawerSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+
+<script>
+// Grab elements
+const door = document.getElementById('door');
+const drawer = document.getElementById('drawer');
+const doorSound = document.getElementById('doorSound');
+const drawerSound = document.getElementById('drawerSound');
+
+// Placeholder cardboard texture (just for style)
+door.style.background = "url('https://cdn.pixabay.com/photo/2017/02/25/22/42/cardboard-2098352_1280.jpg') center/cover";
+drawer.style.background = "url('https://cdn.pixabay.com/photo/2017/02/25/22/42/cardboard-2098352_1280.jpg') center/cover";
+
+// Door click animation
+door.addEventListener('click', () => {
+  doorSound.play();
+  let rot = 0;
+  const interval = setInterval(() => {
+    rot += 5;
+    door.setAttribute('rotation', `0 ${rot} 0`);
+    if(rot >= 90) clearInterval(interval);
+  }, 30);
+  setTimeout(() => alert("Next room loading…"), 1000); // placeholder for room change
+});
+
+// Drawer click animation with particle effect
+drawer.addEventListener('click', () => {
+  drawerSound.play();
+  let offset = 0;
+  const interval = setInterval(() => {
+    offset += 2;
+    drawer.setAttribute('position', `0 ${offset} 0`);
+    if(offset >= 50) clearInterval(interval);
+  }, 30);
+
+  // Simple particle effect
+  const canvas = document.createElement('canvas');
+  canvas.style.position = 'absolute';
+  canvas.style.top = 0;
+  canvas.style.left = 0;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  for(let i=0;i<30;i++){
+    particles.push({x:window.innerWidth/2,y:window.innerHeight/2,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,alpha:1,size:Math.random()*5+2});
+  }
+  const pInterval = setInterval(()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.alpha-=0.03;
+      if(p.alpha>0){
+        ctx.fillStyle = `rgba(0,255,0,${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fill();
+      }
+    });
+    if(particles.every(p=>p.alpha<=0)){
+      clearInterval(pInterval);
+      document.body.removeChild(canvas);
+    }
+  },30);
+});
+
+// Window resize for particle canvas
+window.addEventListener('resize', () => {
+  // No persistent canvas, so nothing to do here
+});
+</script>
+
+</body>
+</html>
